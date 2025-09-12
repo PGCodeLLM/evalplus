@@ -31,6 +31,12 @@ def make_model(
     # gptqmodel only
     gptqmodel_backend: str = "auto",
     gguf_file: str = None,
+    # Additional inference parameters (no defaults - user controlled)
+    top_p: Optional[float] = None,
+    top_k: Optional[int] = None,
+    presence_penalty: Optional[float] = None,
+    repetition_penalty: Optional[float] = None,
+    max_output_tokens: Optional[int] = None,
 ) -> DecoderBase:
     if backend == "vllm":
         from evalplus.provider.vllm import VllmDecoder
@@ -79,6 +85,11 @@ def make_model(
             verify_certificate=verify_certificate,
             instruction_prefix=instruction_prefix,
             response_prefix=response_prefix,
+            top_p=top_p,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            repetition_penalty=repetition_penalty,
+            max_output_tokens=max_output_tokens,
         )
     elif backend == "ollama":
         from evalplus.provider.ollama import OllamaChatDecoder

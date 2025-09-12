@@ -38,6 +38,28 @@ class OpenAIChatDecoder(DecoderBase):
             http_client=httpx.Client(verify=self.verify_certificate),
         )
 
+        # Prepare additional parameters for vLLM compatibility
+        extra_params = {}
+        extra_body = {}
+        
+        # Only add parameters that are actually set (not None)
+        if hasattr(self, 'top_p') and self.top_p is not None:
+            extra_params['top_p'] = self.top_p
+        if hasattr(self, 'top_k') and self.top_k is not None:
+            # top_k goes in extra_body for OpenAI compatibility
+            extra_body['top_k'] = self.top_k
+        if hasattr(self, 'presence_penalty') and self.presence_penalty is not None:
+            extra_params['presence_penalty'] = self.presence_penalty
+        if hasattr(self, 'repetition_penalty') and self.repetition_penalty is not None:
+            # vLLM uses 'frequency_penalty' for repetition_penalty in OpenAI API
+            extra_params['frequency_penalty'] = self.repetition_penalty
+        if hasattr(self, 'max_output_tokens') and self.max_output_tokens is not None:
+            extra_params['max_completion_tokens'] = self.max_output_tokens
+
+        # Add extra_body if we have top_k
+        if extra_body:
+            extra_params['extra_body'] = extra_body
+
         ret = openai_request.make_auto_request(
             client,
             message=prompt,
@@ -45,6 +67,7 @@ class OpenAIChatDecoder(DecoderBase):
             max_tokens=self.max_new_tokens,
             temperature=self.temperature,
             n=batch_size,
+            **extra_params,
         )
 
         outputs = []

@@ -13,8 +13,8 @@ def make_request(
     n: int = 1,
     **kwargs
 ) -> ChatCompletion:
-    kwargs["top_p"] = 0.95
-    kwargs["max_completion_tokens"] = max_tokens
+    kwargs["top_p"] = kwargs.get("top_p", 0.95)
+    kwargs["max_completion_tokens"] = kwargs.get("max_completion_tokens", max_tokens)
     if model.startswith("o1-"):  # pop top-p and max_completion_tokens
         kwargs.pop("top_p")
         kwargs.pop("max_completion_tokens")

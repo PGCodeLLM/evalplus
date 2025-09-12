@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from evalplus.provider.utility import EOS
 
@@ -15,6 +15,12 @@ class DecoderBase(ABC):
         trust_remote_code: bool = False,
         instruction_prefix: str = None,
         response_prefix: str = None,
+        # inference parameters (no defaults - user controlled)
+        top_p: Optional[float] = None,
+        top_k: Optional[int] = None,
+        presence_penalty: Optional[float] = None,
+        repetition_penalty: Optional[float] = None,
+        max_output_tokens: Optional[int] = None,
     ) -> None:
         print("Initializing a decoder model: {} ...".format(name))
         self.name = name
@@ -27,6 +33,11 @@ class DecoderBase(ABC):
         self.trust_remote_code = trust_remote_code
         self.instruction_prefix = instruction_prefix
         self.response_prefix = response_prefix
+        self.top_p = top_p
+        self.top_k = top_k
+        self.presence_penalty = presence_penalty
+        self.repetition_penalty = repetition_penalty
+        self.max_output_tokens = max_output_tokens
 
     @abstractmethod
     def codegen(
