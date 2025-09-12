@@ -153,6 +153,13 @@ def evaluate(
             "TOKENIZERS_PARALLELISM", "false"
         )
 
+        # NOTE: not sure if this is a good idea
+        # Auto-enable greedy mode when temperature is 0 or not defined (None)
+        temperature = model_kwargs.get('temperature', 0.0)
+        if (temperature == 0.0 or temperature is None) and not model_kwargs.get("greedy", False):
+            model_kwargs["greedy"] = True
+            print(f"Auto-enabling greedy mode due to temperature={temperature}")
+
         samples = run_codegen(
             dataset=dataset,
             gguf_file=gguf_file,
