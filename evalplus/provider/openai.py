@@ -38,7 +38,7 @@ class OpenAIChatDecoder(DecoderBase):
             http_client=httpx.Client(verify=self.verify_certificate),
         )
 
-        # Prepare additional parameters for vLLM compatibility
+        # Prepare additional parameters for OpenAI-compatible servers
         extra_params = {}
         extra_body = {}
         
