@@ -139,6 +139,12 @@ def evaluate(
     output_file: Optional[str] = None,
     gguf_file: Optional[str] = None,
     num_ctx: Optional[int] = None,
+    experiment_id: Optional[str] = None,
+    top_p: Optional[float] = None,
+    top_k: Optional[int] = None,
+    presence_penalty: Optional[float] = None,
+    repetition_penalty: Optional[float] = None,
+    max_output_tokens: Optional[int] = None,
     **model_kwargs,
 ):
     if model_kwargs:
@@ -151,6 +157,12 @@ def evaluate(
             dataset=dataset,
             gguf_file=gguf_file,
             num_ctx=num_ctx,
+            experiment_id=experiment_id,
+            top_p=top_p,
+            top_k=top_k,
+            presence_penalty=presence_penalty,
+            repetition_penalty=repetition_penalty,
+            max_output_tokens=max_output_tokens,
             **model_kwargs,
         )
     assert samples is not None, "No samples provided"

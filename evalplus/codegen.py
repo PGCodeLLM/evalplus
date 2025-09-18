@@ -2,6 +2,7 @@ import gc
 import json
 import os
 from typing import Dict, List, Optional
+from datetime import datetime
 
 from evalplus.data import get_evalperf_data, get_human_eval_plus, get_mbpp_plus
 from evalplus.provider import DecoderBase, make_model
@@ -142,6 +143,13 @@ def run_codegen(
     dtype: str = "bfloat16",
     gptqmodel_backend: str = "auto",  # For GPTQModel
     gguf_file: Optional[str] = None,
+    experiment_id: Optional[str] = None, # Experiment ID for organizing results
+    # inference parameters (no defaults - user controlled)
+    top_p: Optional[float] = None,
+    top_k: Optional[int] = None,
+    presence_penalty: Optional[float] = None,
+    repetition_penalty: Optional[float] = None,
+    max_output_tokens: Optional[int] = None,
 ):
     assert dataset in ["humaneval", "mbpp", "evalperf"], f"Invalid dataset {dataset}"
     assert evalperf_type is None or evalperf_type in [
@@ -155,9 +163,15 @@ def run_codegen(
     if evalperf_type:
         identifier += f"-{evalperf_type}"
 
-    target_path = os.path.join(root, dataset, identifier)
+    # Include experiment ID in the path structure if provided
+    if experiment_id:
+        target_path = os.path.join(root, dataset, experiment_id, identifier)
+    else:
+        target_path = os.path.join(root, dataset, identifier)
     if jsonl_fmt:
         target_path += ".jsonl"
+        # Create parent directory for jsonl file
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
     else:
         os.makedirs(target_path, exist_ok=True)
 
@@ -171,6 +185,36 @@ def run_codegen(
         assert id_range is None, "id_range not supported for evalperf"
     else:
         raise ValueError(f"Invalid dataset {dataset}")
+
+    # Generate metadata.json with experiment parameters
+    if experiment_id:
+        exp_dir = os.path.join(root, dataset, experiment_id)
+        os.makedirs(exp_dir, exist_ok=True)
+        
+        metadata = {
+            "experiment_id": experiment_id,
+            "dataset": dataset,
+            "model": model,
+            "backend": backend,
+            "base_url": base_url,
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
+            "presence_penalty": presence_penalty,
+            "repetition_penalty": repetition_penalty,
+            "max_output_tokens": max_output_tokens,
+            "n_samples": n_samples,
+            "batch_size": bs,
+            "greedy": greedy,
+            "version": version,
+            "created_at": datetime.now().isoformat(),
+            "total_tasks": len(dataset_dict),
+            "task_ids": list(dataset_dict.keys())
+        }
+        
+        metadata_path = os.path.join(exp_dir, "metadata.json")
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
 
     all_tasks_complete = False
     if jsonl_fmt and os.path.isfile(target_path):
@@ -248,6 +292,11 @@ def run_codegen(
         attn_implementation=attn_implementation,
         trust_remote_code=trust_remote_code,
         enable_prefix_caching=enable_prefix_caching,
+        top_p=top_p,
+        top_k=top_k,
+        presence_penalty=presence_penalty,
+        repetition_penalty=repetition_penalty,
+        max_output_tokens=max_output_tokens,
         enable_chunked_prefill=enable_chunked_prefill,
         dtype=dtype,
         gptqmodel_backend=gptqmodel_backend,

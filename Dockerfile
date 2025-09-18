@@ -9,6 +9,9 @@ RUN pip install --upgrade pip
 
 COPY . /evalplus
 
+# Set a version for setuptools-scm since we don't have .git metadata
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_EVALPLUS=0.3.1
+
 RUN cd /evalplus && pip install ".[perf]"
 
 # Pre-install the dataset
