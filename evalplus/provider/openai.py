@@ -51,8 +51,7 @@ class OpenAIChatDecoder(DecoderBase):
         if hasattr(self, 'presence_penalty') and self.presence_penalty is not None:
             extra_params['presence_penalty'] = self.presence_penalty
         if hasattr(self, 'repetition_penalty') and self.repetition_penalty is not None:
-            # vLLM uses 'frequency_penalty' for repetition_penalty in OpenAI API
-            extra_params['frequency_penalty'] = self.repetition_penalty
+            extra_body['repetition_penalty'] = self.repetition_penalty
         if hasattr(self, 'max_output_tokens') and self.max_output_tokens is not None:
             extra_params['max_completion_tokens'] = self.max_output_tokens
 
