@@ -86,6 +86,7 @@ class OpenAIChatDecoder(DecoderBase):
             max_tokens=self.max_new_tokens,
             temperature=self.temperature,
             n=batch_size,
+            stream=self.stream,
             **extra_params,
         )
 

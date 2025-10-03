@@ -150,6 +150,7 @@ def run_codegen(
     presence_penalty: Optional[float] = None,
     repetition_penalty: Optional[float] = None,
     max_output_tokens: Optional[int] = None,
+    stream: bool = False,
     extra_body: Optional[dict] = None,
     extra_headers: Optional[dict] = None,
 ):
@@ -301,6 +302,7 @@ def run_codegen(
         presence_penalty=presence_penalty,
         repetition_penalty=repetition_penalty,
         max_output_tokens=max_output_tokens,
+        stream=stream,
         extra_body=extra_body,
         extra_headers=extra_headers,
         enable_chunked_prefill=enable_chunked_prefill,
