@@ -17,6 +17,27 @@ class OpenAIChatDecoder(DecoderBase):
         self.base_url = base_url
         self.verify_certificate = verify_certificate
 
+        infer_params = {
+            'model': name,
+            'temperature': self.temperature,
+        }
+        if self.top_p is not None:
+            infer_params['top_p'] = self.top_p
+        if self.top_k is not None:
+            infer_params['top_k'] = self.top_k
+        if self.presence_penalty is not None:
+            infer_params['presence_penalty'] = self.presence_penalty
+        if self.repetition_penalty is not None:
+            infer_params['repetition_penalty'] = self.repetition_penalty
+        if self.max_output_tokens is not None:
+            infer_params['max_output_tokens'] = self.max_output_tokens
+        if self.extra_body:
+            infer_params['extra_body'] = self.extra_body
+        if self.extra_headers:
+            infer_params['extra_headers'] = self.extra_headers
+
+        print(f"[EvalPlus Inference Parameters] {infer_params}")
+
     def codegen(
         self, prompt: str, do_sample: bool = True, num_samples: int = 200
     ) -> List[str]:
