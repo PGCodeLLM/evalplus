@@ -21,6 +21,7 @@ class DecoderBase(ABC):
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
         max_output_tokens: Optional[int] = None,
+        stream: bool = False,
         extra_body: Optional[dict] = None,
         extra_headers: Optional[dict] = None,
     ) -> None:
@@ -40,6 +41,7 @@ class DecoderBase(ABC):
         self.presence_penalty = presence_penalty
         self.repetition_penalty = repetition_penalty
         self.max_output_tokens = max_output_tokens
+        self.stream = stream
         self.extra_body = extra_body
         self.extra_headers = extra_headers
 
