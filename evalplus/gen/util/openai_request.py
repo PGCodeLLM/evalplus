@@ -1,4 +1,5 @@
 import time
+from typing import Any
 
 import openai
 from openai.types.chat import ChatCompletion
@@ -11,8 +12,9 @@ def make_request(
     max_tokens: int = 512,
     temperature: float = 1,
     n: int = 1,
+    stream: bool = False,
     **kwargs
-) -> ChatCompletion:
+) -> Any:
     kwargs["top_p"] = kwargs.get("top_p", 0.95)
     kwargs["max_completion_tokens"] = kwargs.get("max_completion_tokens", max_tokens)
     if model.startswith("o1-"):  # pop top-p and max_completion_tokens
@@ -20,18 +22,54 @@ def make_request(
         kwargs.pop("max_completion_tokens")
         temperature = 1.0  # o1 models do not support temperature
 
-    return client.chat.completions.create(
+    if not stream:
+        return client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "user", "content": message},
+            ],
+            temperature=temperature,
+            n=n,
+            **kwargs
+        )
+
+    # Handle streaming
+    stream_response = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "user", "content": message},
         ],
         temperature=temperature,
         n=n,
+        stream=True,
         **kwargs
     )
 
+    # Accumulate chunks
+    accumulated_content = [""] * n
 
-def make_auto_request(*args, **kwargs) -> ChatCompletion:
+    for chunk in stream_response:
+        if chunk.choices:
+            for choice in chunk.choices:
+                idx = choice.index
+                if choice.delta.content:
+                    accumulated_content[idx] += choice.delta.content
+
+    # Build response object compatible with non-streaming format
+    class StreamedChoice:
+        def __init__(self, content, index):
+            self.message = type('obj', (object,), {'content': content})()
+            self.index = index
+
+    class StreamedResponse:
+        def __init__(self, choices):
+            self.choices = choices
+
+    choices = [StreamedChoice(content, i) for i, content in enumerate(accumulated_content)]
+    return StreamedResponse(choices)
+
+
+def make_auto_request(*args, **kwargs) -> Any:
     ret = None
     while ret is None:
         try:
