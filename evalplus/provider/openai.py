@@ -32,32 +32,38 @@ class OpenAIChatDecoder(DecoderBase):
         return self._codegen_api_batch(prompt, batch_size)
 
     def _codegen_api_batch(self, prompt: str, batch_size: int) -> List[str]:
+        import json
+
         client = openai.OpenAI(
             api_key=os.getenv("OPENAI_API_KEY", "none"),
             base_url=self.base_url,
             http_client=httpx.Client(verify=self.verify_certificate),
         )
 
+        # Parse user-provided extra_body and extra_headers
+        extra_body = json.loads(self.extra_body) if self.extra_body else {}
+        extra_headers = json.loads(self.extra_headers) if self.extra_headers else {}
+
         # Prepare additional parameters for OpenAI-compatible servers
         extra_params = {}
-        extra_body = {}
-        
+
         # Only add parameters that are actually set (not None)
-        if hasattr(self, 'top_p') and self.top_p is not None:
+        if self.top_p is not None:
             extra_params['top_p'] = self.top_p
-        if hasattr(self, 'top_k') and self.top_k is not None:
-            # top_k goes in extra_body for OpenAI compatibility
+        if self.top_k is not None:
             extra_body['top_k'] = self.top_k
-        if hasattr(self, 'presence_penalty') and self.presence_penalty is not None:
+        if self.presence_penalty is not None:
             extra_params['presence_penalty'] = self.presence_penalty
-        if hasattr(self, 'repetition_penalty') and self.repetition_penalty is not None:
+        if self.repetition_penalty is not None:
             extra_body['repetition_penalty'] = self.repetition_penalty
-        if hasattr(self, 'max_output_tokens') and self.max_output_tokens is not None:
+        if self.max_output_tokens is not None:
             extra_params['max_completion_tokens'] = self.max_output_tokens
 
-        # Add extra_body if we have top_k
+        # Add extra_body and extra_headers if they have content
         if extra_body:
             extra_params['extra_body'] = extra_body
+        if extra_headers:
+            extra_params['extra_headers'] = extra_headers
 
         ret = openai_request.make_auto_request(
             client,

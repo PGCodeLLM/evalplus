@@ -21,6 +21,8 @@ class DecoderBase(ABC):
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
         max_output_tokens: Optional[int] = None,
+        extra_body: Optional[str] = None,
+        extra_headers: Optional[str] = None,
     ) -> None:
         print("Initializing a decoder model: {} ...".format(name))
         self.name = name
@@ -38,6 +40,8 @@ class DecoderBase(ABC):
         self.presence_penalty = presence_penalty
         self.repetition_penalty = repetition_penalty
         self.max_output_tokens = max_output_tokens
+        self.extra_body = extra_body
+        self.extra_headers = extra_headers
 
     @abstractmethod
     def codegen(

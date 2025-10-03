@@ -150,6 +150,8 @@ def run_codegen(
     presence_penalty: Optional[float] = None,
     repetition_penalty: Optional[float] = None,
     max_output_tokens: Optional[int] = None,
+    extra_body: Optional[str] = None,
+    extra_headers: Optional[str] = None,
 ):
     assert dataset in ["humaneval", "mbpp", "evalperf"], f"Invalid dataset {dataset}"
     assert evalperf_type is None or evalperf_type in [
@@ -297,6 +299,8 @@ def run_codegen(
         presence_penalty=presence_penalty,
         repetition_penalty=repetition_penalty,
         max_output_tokens=max_output_tokens,
+        extra_body=extra_body,
+        extra_headers=extra_headers,
         enable_chunked_prefill=enable_chunked_prefill,
         dtype=dtype,
         gptqmodel_backend=gptqmodel_backend,

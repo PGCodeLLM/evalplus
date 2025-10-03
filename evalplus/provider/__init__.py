@@ -37,6 +37,8 @@ def make_model(
     presence_penalty: Optional[float] = None,
     repetition_penalty: Optional[float] = None,
     max_output_tokens: Optional[int] = None,
+    extra_body: Optional[str] = None,
+    extra_headers: Optional[str] = None,
 ) -> DecoderBase:
     if backend == "vllm":
         from evalplus.provider.vllm import VllmDecoder
@@ -90,6 +92,8 @@ def make_model(
             presence_penalty=presence_penalty,
             repetition_penalty=repetition_penalty,
             max_output_tokens=max_output_tokens,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
         )
     elif backend == "ollama":
         from evalplus.provider.ollama import OllamaChatDecoder

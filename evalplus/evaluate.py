@@ -145,6 +145,8 @@ def evaluate(
     presence_penalty: Optional[float] = None,
     repetition_penalty: Optional[float] = None,
     max_output_tokens: Optional[int] = None,
+    extra_body: Optional[str] = None,
+    extra_headers: Optional[str] = None,
     **model_kwargs,
 ):
     if model_kwargs:
@@ -163,6 +165,8 @@ def evaluate(
             presence_penalty=presence_penalty,
             repetition_penalty=repetition_penalty,
             max_output_tokens=max_output_tokens,
+            extra_body=extra_body,
+            extra_headers=extra_headers,
             **model_kwargs,
         )
     assert samples is not None, "No samples provided"
