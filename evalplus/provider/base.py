@@ -21,8 +21,8 @@ class DecoderBase(ABC):
         presence_penalty: Optional[float] = None,
         repetition_penalty: Optional[float] = None,
         max_output_tokens: Optional[int] = None,
-        extra_body: Optional[str] = None,
-        extra_headers: Optional[str] = None,
+        extra_body: Optional[dict] = None,
+        extra_headers: Optional[dict] = None,
     ) -> None:
         print("Initializing a decoder model: {} ...".format(name))
         self.name = name

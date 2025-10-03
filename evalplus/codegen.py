@@ -150,8 +150,8 @@ def run_codegen(
     presence_penalty: Optional[float] = None,
     repetition_penalty: Optional[float] = None,
     max_output_tokens: Optional[int] = None,
-    extra_body: Optional[str] = None,
-    extra_headers: Optional[str] = None,
+    extra_body: Optional[dict] = None,
+    extra_headers: Optional[dict] = None,
 ):
     assert dataset in ["humaneval", "mbpp", "evalperf"], f"Invalid dataset {dataset}"
     assert evalperf_type is None or evalperf_type in [
@@ -211,7 +211,9 @@ def run_codegen(
             "version": version,
             "created_at": datetime.now().isoformat(),
             "total_tasks": len(dataset_dict),
-            "task_ids": list(dataset_dict.keys())
+            "task_ids": list(dataset_dict.keys()),
+            "extra_body": extra_body,
+            "extra_headers": extra_headers,
         }
         
         metadata_path = os.path.join(exp_dir, "metadata.json")
