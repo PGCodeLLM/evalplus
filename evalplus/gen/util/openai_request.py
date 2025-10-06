@@ -1,8 +1,8 @@
 import time
-from typing import Any
 
 import openai
-from openai.types.chat import ChatCompletion
+from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
 
 
 def make_request(
@@ -14,62 +14,75 @@ def make_request(
     n: int = 1,
     stream: bool = False,
     **kwargs
-) -> Any:
+) -> ChatCompletion:
     kwargs["top_p"] = kwargs.get("top_p", 0.95)
     kwargs["max_completion_tokens"] = kwargs.get("max_completion_tokens", max_tokens)
-    if model.startswith("o1-"):  # pop top-p and max_completion_tokens
-        kwargs.pop("top_p")
-        kwargs.pop("max_completion_tokens")
-        temperature = 1.0  # o1 models do not support temperature
+
+    if model.startswith("o1-"):
+        kwargs.pop("top_p", None)
+        kwargs.pop("max_completion_tokens", None)
+        temperature = 1.0
 
     if not stream:
         return client.chat.completions.create(
             model=model,
-            messages=[
-                {"role": "user", "content": message},
-            ],
+            messages=[{"role": "user", "content": message}],
             temperature=temperature,
             n=n,
             **kwargs
         )
 
-    # Handle streaming
     stream_response = client.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "user", "content": message},
-        ],
+        messages=[{"role": "user", "content": message}],
         temperature=temperature,
         n=n,
         stream=True,
         **kwargs
     )
 
-    # Accumulate chunks
     accumulated_content = [""] * n
+    finish_reasons = [None] * n
+    roles = [None] * n
 
     for chunk in stream_response:
-        if chunk.choices:
-            for choice in chunk.choices:
-                idx = choice.index
+        if not chunk.choices:
+            continue
+        for choice in chunk.choices:
+            idx = choice.index
+            if choice.delta:
                 if choice.delta.content:
                     accumulated_content[idx] += choice.delta.content
+                if choice.delta.role:
+                    roles[idx] = choice.delta.role
+            if choice.finish_reason:
+                finish_reasons[idx] = choice.finish_reason
 
-    # Build response object compatible with non-streaming format
-    class StreamedChoice:
-        def __init__(self, content, index):
-            self.message = type('obj', (object,), {'content': content})()
-            self.index = index
+    choices = []
+    for i in range(n):
+        role = roles[i] if roles[i] else "assistant"
+        finish_reason = finish_reasons[i] if finish_reasons[i] else "stop"
+        choices.append(
+            Choice(
+                index=i,
+                finish_reason=finish_reason,
+                message=ChatCompletionMessage(
+                    role=role,
+                    content=accumulated_content[i],
+                ),
+            )
+        )
 
-    class StreamedResponse:
-        def __init__(self, choices):
-            self.choices = choices
+    return ChatCompletion(
+        id="streamed-" + str(int(time.time())),
+        object="chat.completion",
+        created=int(time.time()),
+        model=model,
+        choices=choices,
+    )
 
-    choices = [StreamedChoice(content, i) for i, content in enumerate(accumulated_content)]
-    return StreamedResponse(choices)
 
-
-def make_auto_request(*args, **kwargs) -> Any:
+def make_auto_request(*args, **kwargs) -> ChatCompletion:
     ret = None
     while ret is None:
         try:
