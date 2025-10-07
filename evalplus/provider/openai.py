@@ -37,6 +37,8 @@ class OpenAIChatDecoder(DecoderBase):
             infer_params['extra_headers'] = self.extra_headers
 
         print(f"[EvalPlus Inference Parameters] {infer_params}")
+        if self.stream:
+            print("[EvalPlus] Streaming is enabled.")
 
     def codegen(
         self, prompt: str, do_sample: bool = True, num_samples: int = 200
@@ -86,6 +88,7 @@ class OpenAIChatDecoder(DecoderBase):
             max_tokens=self.max_new_tokens,
             temperature=self.temperature,
             n=batch_size,
+            stream=self.stream,
             **extra_params,
         )
 
