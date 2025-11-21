@@ -2,7 +2,6 @@ import gc
 import json
 import os
 from typing import Dict, List, Optional
-from datetime import datetime
 
 from evalplus.data import get_evalperf_data, get_human_eval_plus, get_mbpp_plus
 from evalplus.provider import DecoderBase, make_model
@@ -19,6 +18,7 @@ def codegen(
     id_range=None,
     resume=True,
     num_ctx=None,
+    progress_path=None,
 ):
     task2nexist = {}
     if resume and target_path.endswith(".jsonl") and os.path.isfile(target_path):
@@ -37,6 +37,10 @@ def codegen(
 
     print(f"Sanitized code outputs will be saved to {target_path}")
     print(f"Raw outputs will be saved to {raw_target_path}")
+
+    # Track progress
+    total_tasks = len(dataset)
+    completed_tasks = 0
 
     backend_type: str = type(model).__name__
     with progress(backend_type) as p:
@@ -115,6 +119,12 @@ def codegen(
                             f.write(solution)
                     sidx += 1
 
+            # Update progress after completing each task
+            completed_tasks += 1
+            if progress_path:
+                with open(progress_path, "w") as f:
+                    json.dump({"n": completed_tasks, "total": total_tasks}, f)
+
 
 def run_codegen(
     model: str,
@@ -189,37 +199,12 @@ def run_codegen(
     else:
         raise ValueError(f"Invalid dataset {dataset}")
 
-    # Generate metadata.json with experiment parameters
+    # Set up progress.json path for tracking
+    progress_path = None
     if experiment_id:
-        exp_dir = os.path.join(root, dataset, experiment_id)
+        exp_dir = os.path.join(root, experiment_id)
         os.makedirs(exp_dir, exist_ok=True)
-        
-        metadata = {
-            "experiment_id": experiment_id,
-            "dataset": dataset,
-            "model": model,
-            "backend": backend,
-            "base_url": base_url,
-            "temperature": temperature,
-            "top_p": top_p,
-            "top_k": top_k,
-            "presence_penalty": presence_penalty,
-            "repetition_penalty": repetition_penalty,
-            "max_output_tokens": max_output_tokens,
-            "n_samples": n_samples,
-            "batch_size": bs,
-            "greedy": greedy,
-            "version": version,
-            "created_at": datetime.now().isoformat(),
-            "total_tasks": len(dataset_dict),
-            "task_ids": list(dataset_dict.keys()),
-            "extra_body": extra_body,
-            "extra_headers": extra_headers,
-        }
-        
-        metadata_path = os.path.join(exp_dir, "metadata.json")
-        with open(metadata_path, 'w') as f:
-            json.dump(metadata, f, indent=2)
+        progress_path = os.path.join(exp_dir, "progress.json")
 
     all_tasks_complete = False
     if jsonl_fmt and os.path.isfile(target_path):
@@ -319,6 +304,7 @@ def run_codegen(
         n_samples=n_samples,
         resume=resume,
         id_range=id_range,
+        progress_path=progress_path,
     )
 
     # force shutdown the model runner
