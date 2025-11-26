@@ -180,3 +180,7 @@ trash-bin
 .bak
 evalplus.github.io
 evalplus_results/
+
+
+certs/*
+!certs/.gitkeep
