@@ -139,7 +139,6 @@ def evaluate(
     output_file: Optional[str] = None,
     gguf_file: Optional[str] = None,
     num_ctx: Optional[int] = None,
-    experiment_id: Optional[str] = None,
     top_p: Optional[float] = None,
     top_k: Optional[int] = None,
     presence_penalty: Optional[float] = None,
@@ -148,6 +147,7 @@ def evaluate(
     stream: bool = False,
     extra_body: Optional[dict] = None,
     extra_headers: Optional[dict] = None,
+    debug: bool = False,
     **model_kwargs,
 ):
     if model_kwargs:
@@ -160,7 +160,6 @@ def evaluate(
             dataset=dataset,
             gguf_file=gguf_file,
             num_ctx=num_ctx,
-            experiment_id=experiment_id,
             top_p=top_p,
             top_k=top_k,
             presence_penalty=presence_penalty,
@@ -169,6 +168,7 @@ def evaluate(
             stream=stream,
             extra_body=extra_body,
             extra_headers=extra_headers,
+            debug=debug,
             **model_kwargs,
         )
     assert samples is not None, "No samples provided"
@@ -213,6 +213,13 @@ def evaluate(
                 dataset_hash,
                 MBPP_OUTPUT_NOT_NONE_TASKS,
             )
+
+        # Debug mode: limit to first 5 problems
+        if debug:
+            print("DEBUG MODE: Limiting evaluation to first 5 problems")
+            problem_ids = list(problems.keys())[:5]
+            problems = {pid: problems[pid] for pid in problem_ids}
+            expected_output = {pid: expected_output[pid] for pid in problem_ids if pid in expected_output}
 
         results = {
             "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
