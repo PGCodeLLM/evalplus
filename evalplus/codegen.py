@@ -38,8 +38,15 @@ def codegen(
     print(f"Sanitized code outputs will be saved to {target_path}")
     print(f"Raw outputs will be saved to {raw_target_path}")
 
-    # Track progress
-    total_tasks = len(dataset)
+    # Track progress - calculate actual total based on id_range
+    if id_range is not None:
+        # Count tasks that will actually be processed
+        total_tasks = sum(
+            1 for task_id in dataset.keys()
+            if id_range[0] <= int(task_id.split("/")[1]) < id_range[1]
+        )
+    else:
+        total_tasks = len(dataset)
     completed_tasks = 0
 
     backend_type: str = type(model).__name__
@@ -162,7 +169,6 @@ def run_codegen(
     stream: bool = False,
     extra_body: Optional[dict] = None,
     extra_headers: Optional[dict] = None,
-    debug: bool = False
 ):
     assert dataset in ["humaneval", "mbpp", "evalperf"], f"Invalid dataset {dataset}"
     assert evalperf_type is None or evalperf_type in [
@@ -196,13 +202,9 @@ def run_codegen(
     else:
         raise ValueError(f"Invalid dataset {dataset}")
 
-    if debug:
-        print("[DEBUG MODE]: Processing only first 5 problems")
-        dataset_dict = dict(list(dataset_dict.items())[:5])
-        print(f"Debug dataset contains: {list(dataset_dict.keys())}")
-
-    # Set up progress.json path for tracking
-    progress_path = os.path.join(root, "progress.json")
+    # Set up progress.json path for tracking - unique per run to avoid conflicts
+    progress_filename = f"{identifier}.progress.json"
+    progress_path = os.path.join(root, progress_filename)
 
     all_tasks_complete = False
     if jsonl_fmt and os.path.isfile(target_path):
