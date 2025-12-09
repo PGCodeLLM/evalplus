@@ -14,6 +14,10 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_EVALPLUS=0.3.1
 
 RUN cd /evalplus && pip install ".[perf]"
 
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+COPY certs /usr/local/share/ca-certificates
+RUN update-ca-certificates
+
 # Pre-install the dataset
 RUN python3 -c "from evalplus.data import *; get_human_eval_plus(); get_mbpp_plus(); get_evalperf_data()"
 
