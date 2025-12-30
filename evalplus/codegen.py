@@ -202,9 +202,8 @@ def run_codegen(
     else:
         raise ValueError(f"Invalid dataset {dataset}")
 
-    # Set up progress.json path for tracking - unique per run to avoid conflicts
-    progress_filename = f"{identifier}.progress.json"
-    progress_path = os.path.join(root, progress_filename)
+    # Set up progress.json path for tracking
+    progress_path = os.path.join(root, "progress.json")
 
     all_tasks_complete = False
     if jsonl_fmt and os.path.isfile(target_path):
